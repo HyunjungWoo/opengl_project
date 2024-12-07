@@ -34,6 +34,9 @@ private:
 	int width;
 	int height;
 
+	bool isdebug;
+
+
 public:
 	// 게임 로직에서, update, draw..., 키 입력
 	Scene(int winWidth, int winHeight);

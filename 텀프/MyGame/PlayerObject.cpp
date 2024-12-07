@@ -187,14 +187,11 @@ bool PlayerObject::checkCollision(const GameObject& other) const
 		// AABB-구체 충돌 검사
 		glm::vec3 closestPoint = glm::clamp(sphereCenter, aabb.getMinBounds(), aabb.getMaxBounds());
 		float distanceSquared = glm::distance2(sphereCenter, closestPoint);
-
-
+		
 		return distanceSquared <= (sphereRadius * sphereRadius);
 
 
 	}
-
-	
 
 	std::cerr << "Unsupported collision type for PlayerObject.\n";
 	return false;

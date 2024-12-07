@@ -19,6 +19,7 @@
 Scene::Scene(int winWidth, int winHeight)
 	: width{ winWidth }, height{ winHeight }
 {
+	isdebug = false;
 }
 
 Scene::~Scene()
@@ -152,7 +153,7 @@ void Scene::draw() const
 
 	// 오브젝트 그리기
 	player->draw();		// 안그리긴 해도... 나중에 그릴 수 있으니 호출해준다
-	player->visualizeCollisionBox(viewMatrix, projMatrix);
+	if (isdebug) player->visualizeCollisionBox(viewMatrix, projMatrix);
 
 
 	glUseProgram(texShader);
@@ -193,7 +194,7 @@ void Scene::draw() const
 			}
 
 			// Draw 호출
-			if (obj->getDie()) { std::cout << "그리지마\n"; }
+			if (obj->getDie()) { /*std::cout << "그리지마\n";*/ }
 			else{
 				if (obj->getCollision()) {
 					alphaValue = 4.f;
@@ -206,12 +207,12 @@ void Scene::draw() const
 
 				}
 				crushObj->draw();
-				crushObj->visualizeCollisionBox(viewMatrix, projMatrix); // AABB를 시각화
+				if(isdebug) crushObj->visualizeCollisionBox(viewMatrix, projMatrix); // AABB를 시각화
 			}
 		}
 		else {
 			// 다른 타입의 GameObject일 경우 처리 (필요 시)
-			std::cerr << "Non-CrushObject encountered in texObjects.\n";
+			//std::cerr << "Non-CrushObject encountered in texObjects.\n";
 		}
 	}
 }
@@ -222,6 +223,10 @@ void Scene::keyboard(unsigned char key, bool isPressed)
 
 	if (isPressed) {			// 눌러졌을 때
 		switch (key) {
+		case 'M':
+		case 'm':
+			isdebug = !isdebug;
+			break;
 		default:
 			break;
 		}

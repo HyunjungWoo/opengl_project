@@ -44,10 +44,9 @@ void CrushObject::update(float elapsedTime)
     if (getCollision()) {
         // 충돌이 발생한 후, 경과 시간만큼 체크
         collisionTime += elapsedTime;
-        std::cout << "collisionTime" << collisionTime;
+       
         if (collisionTime >= 2.f) {
             // 3초가 지나면 객체 삭제
-            std::cout << "Object " << this << " will be deleted after 3 seconds.\n";
             setDie(true);
             collisionTime = 0.f;
 
@@ -81,18 +80,14 @@ void CrushObject::updateAABB()
     float halfDepth = radius * sqrt(3.0f) / 2.0f; // 깊이의 절반
 
     glm::vec3 halfExtent = glm::vec3(halfRadius, halfHeight, halfDepth);
-    std::cout << "halfExtent: " << halfExtent.x << ", " << halfExtent.y << ", " << halfExtent.z << std::endl;
-    
+   
     // 최소 및 최대 경계 계산
     glm::vec3 minBounds = center - glm::vec3(halfExtent.x, 0, halfExtent.z);
     glm::vec3 maxBounds = center + glm::vec3(halfExtent.x, 0.4, halfExtent.z);
 
     boundingBox.setBounds(minBounds, maxBounds);
 
-    // 디버깅 출력
-    std::cout << "Center: " << center.x << ", " << center.y << ", " << center.z << std::endl;
-    std::cout << "Min Bounds: " << minBounds.x << ", " << minBounds.y << ", " << minBounds.z << std::endl;
-    std::cout << "Max Bounds: " << maxBounds.x << ", " << maxBounds.y << ", " << maxBounds.z << std::endl;
+   
 }
 
 bool CrushObject::checkCollision(const GameObject& other) const

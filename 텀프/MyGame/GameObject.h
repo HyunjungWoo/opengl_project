@@ -42,10 +42,9 @@ public:
 	virtual void visualizeCollisionBox(const glm::mat4& viewMatrix, const glm::mat4& projMatrix) const = 0;                // 충돌 박스 시각화
 
 	virtual void onCollision(GameObject* other) {
-		std::cout << "충돌 발생: " << this << " 와 " << other << std::endl;
-		std::cout << "삭제" << std::endl;
+		/*std::cout << "충돌 발생: " << this << " 와 " << other << std::endl;
+		std::cout << "삭제" << std::endl;*/
 		setCollision(true);
-		//setDie(true);
 	}
 
 	// 삭제 관련

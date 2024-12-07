@@ -8,7 +8,7 @@ CrushObject::CrushObject()
     height = 0.f;
     radius = 1.0f;
 	isCrush = false;
-    
+    collisionTime = 0.f;
 }
 
 CrushObject::~CrushObject()
@@ -41,6 +41,18 @@ void CrushObject::initilize()
 
 void CrushObject::update(float elapsedTime)
 {
+    if (getCollision()) {
+        // 충돌이 발생한 후, 경과 시간만큼 체크
+        collisionTime += elapsedTime;
+        std::cout << "collisionTime" << collisionTime;
+        if (collisionTime >= 2.f) {
+            // 3초가 지나면 객체 삭제
+            std::cout << "Object " << this << " will be deleted after 3 seconds.\n";
+            setDie(true);
+            collisionTime = 0.f;
+
+        }
+    }
 }
 
 void CrushObject::draw() const
@@ -65,7 +77,7 @@ void CrushObject::updateAABB()
 
     // AABB의 반쪽 크기 (Half Extents)
     float halfHeight = sqrt(3.0f) * radius / 2.0f; // 높이의 절반
-    float halfRadius = radius;                    // 반경
+    float halfRadius = radius ;                    // 반경
     float halfDepth = radius * sqrt(3.0f) / 2.0f; // 깊이의 절반
 
     glm::vec3 halfExtent = glm::vec3(halfRadius, halfHeight, halfDepth);

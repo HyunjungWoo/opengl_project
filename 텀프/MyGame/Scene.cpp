@@ -99,15 +99,18 @@ void Scene::update(float elapsedTime)
 {
 	player->update(elapsedTime);
 	for (auto& obj : objects) {
-		obj->update(elapsedTime);
-		
+		if (obj->getDie()){
+			objectCount--;
+			obj.reset();  // 객체를 명시적으로 삭제할 때
+		}
+		else obj->update(elapsedTime);
 	}
 
 	// 플레이어와 다른 오브젝트 충돌 검사
 	for (size_t i = 0; i < objects.size(); ++i) {
-		if (objects[i]->checkCollision(*player)) {
+		if (!objects[i]->getDie() && objects[i]->checkCollision(*player)) {
 			// 충돌 시 처리 (필요한 로직 구현)
-			player->onCollision(objects[i].get());
+			//player->onCollision(objects[i].get());
 			objects[i]->onCollision(player);
 		}
 	}
@@ -174,7 +177,6 @@ void Scene::draw() const
 	
 	// 알파 값 설정 (0.0 ~ 1.0 사이 값)
 	float alphaValue = 1.f; // 50% 투명
-	glUniform1f(glGetUniformLocation(texShader, "brightness"), alphaValue);
 
 
 	for (const auto& obj : objects) {
@@ -191,8 +193,21 @@ void Scene::draw() const
 			}
 
 			// Draw 호출
-			crushObj->draw();
-			crushObj->visualizeCollisionBox(viewMatrix,projMatrix); // AABB를 시각화
+			if (obj->getDie()) { std::cout << "그리지마\n"; }
+			else{
+				if (obj->getCollision()) {
+					alphaValue = 4.f;
+					glUniform1f(glGetUniformLocation(texShader, "brightness"), alphaValue);
+				}
+				else
+				{
+					alphaValue = 1.5f;
+					glUniform1f(glGetUniformLocation(texShader, "brightness"), alphaValue);
+
+				}
+				crushObj->draw();
+				crushObj->visualizeCollisionBox(viewMatrix, projMatrix); // AABB를 시각화
+			}
 		}
 		else {
 			// 다른 타입의 GameObject일 경우 처리 (필요 시)

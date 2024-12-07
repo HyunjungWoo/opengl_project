@@ -30,7 +30,7 @@ PlayerObject::~PlayerObject()
 
 void PlayerObject::initilize()
 {
-	radius = 1.0f;
+	radius = 0.3f;
 
 
 }

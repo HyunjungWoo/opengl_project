@@ -10,6 +10,7 @@ class CrushObject : public GameObject
 	AABB	boundingBox;       // AABB 충돌 경계
 	float	radius;  // 육각기둥 반지름
 	float	height;
+	float	collisionTime;
 public:
 
 	CrushObject();

@@ -43,6 +43,23 @@ public:
 
 	virtual void onCollision(GameObject* other) {
 		std::cout << "面倒 惯积: " << this << " 客 " << other << std::endl;
+		std::cout << "昏力" << std::endl;
+		setCollision(true);
+		//setDie(true);
 	}
+
+	// 昏力 包访
+	bool getDie() { 
+		if(this!=nullptr) return isdie;
+	}
+	bool getCollision() {
+		if (this != nullptr) return isCollision;
+	}
+	void setDie(bool value) { isdie = value; }
+	void setCollision(bool value) { isCollision = value; }
+
+private:
+	bool isdie;
+	bool isCollision;
 };
 

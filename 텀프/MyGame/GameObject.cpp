@@ -5,6 +5,8 @@
 GameObject::GameObject()
 	: worldTransform(1.f)
 {
+	isCollision = false;
+	isdie = false;
 }
 
 GameObject::~GameObject()

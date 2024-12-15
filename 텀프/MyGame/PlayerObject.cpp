@@ -123,13 +123,21 @@ void PlayerObject::draw() const
 
 
     // 모델변환행렬
-    GLint modelLoc = glGetUniformLocation(shader, "modelTransform");
+    GLint modelLoc = glGetUniformLocation(shader, "model");
     if (modelLoc < 0)
         std::cout << "modelLoc 찾지 못함\n";
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(finalTransform));
 
     glBindVertexArray(FbxVAO);
     glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+
+    glm::vec3 playerPos = getPosition();
+
+    // 카메라의 위치: 플레이어 위치 뒤쪽(Z 축 -3)으로 이동하고 Y 축으로 높임
+    glm::vec3 cameraOffset(0.0f, 3.0f, 4.0f); // Y축: 높이, Z축: 거리
+    glm::vec3 cameraPos = playerPos - getLook() * cameraOffset.z; // 뒤쪽으로 카메라 위치
+    cameraPos.y = playerPos.y + cameraOffset.y; // 위쪽으로 카메라 높이 설정
+
 }
 
 void PlayerObject::release()

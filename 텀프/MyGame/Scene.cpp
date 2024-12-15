@@ -32,6 +32,8 @@ void Scene::initialize()
 	shader = makeShader("./Shader/vertex.glsl", "./Shader/fragment.glsl");
 	plainShader = makeShader("./Shader/plainVert.glsl", "./Shader/plainFrag.glsl");
 	texShader = makeShader("./Shader/texVertex.glsl", "./Shader/texFrag.glsl");
+	fbxShader = makeShader("./Shader/vertex_shader.glsl", "./Shader/fragment_shader.glsl");
+
 
 	initBuffer(&sphereVAO, &sphereVertexCount, "./OBJ/sphere.obj");
 	initBuffer(&teapotVAO, &teapotVertexCount, "./OBJ/teapot.obj");
@@ -39,10 +41,13 @@ void Scene::initialize()
 	std::string Filename[2] = { "./Image/test2.png","./Image/test5.png" };
 	initTexture(hexagonTexture, 2, Filename);
 
+	std::string playerFilename = "./Image/1.png";
+	initTexture(&playerTexture, 1, &playerFilename);
+
 	player = new PlayerObject;
 
 	player->setVAO(sphereVAO, sphereVertexCount);
-	player->setShader(shader);
+	player->setShader(fbxShader);
 	player->rotateY(180.f);
 
 	player->setPosition(0.f, 1.0f, 5.f);
@@ -162,11 +167,35 @@ void Scene::draw() const
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 	}
 
+	{
+		glUseProgram(fbxShader);
+
+		// 카메라, 투영은 씬 전체에 적용..
+		GLint viewLoc = glGetUniformLocation(fbxShader, "view");
+		if (viewLoc < 0)
+			std::cout << "viewLoc 찾지 못함\n";
+		GLint projLoc = glGetUniformLocation(fbxShader, "projection");
+		if (projLoc < 0)
+			std::cout << "projLoc 찾지 못함\n";
+		GLint cameraPosLoc = glGetUniformLocation(texShader, "cameraPos");
+		if (cameraPosLoc < 0)
+			std::cout << "cameraPosLoc 찾지 못함\n";
+
+		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(viewMatrix));
+		glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projMatrix));
+		glUniform3f(cameraPosLoc, cameraPos.x, cameraPos.y, cameraPos.z);
+
+		glUseProgram(fbxShader);
+
+		glBindTexture(GL_TEXTURE_2D, playerTexture); // playerTexture 바인딩
+
+		player->draw();		// 안그리긴 해도... 나중에 그릴 수 있으니 호출해준다
+	}
+
 	glUseProgram(shader);
 
 	if (isdebug) player->visualizeCollisionBox(viewMatrix, projMatrix);
 	// 오브젝트 그리기
-	player->draw();		// 안그리긴 해도... 나중에 그릴 수 있으니 호출해준다
 
 	glUseProgram(texShader);
 

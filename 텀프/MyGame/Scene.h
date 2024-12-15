@@ -15,6 +15,7 @@ private:
 	GLuint shader;
 	GLuint plainShader;
 	GLuint texShader;
+	GLuint fbxShader;
 
 	GLuint sphereVAO;
 	int sphereVertexCount;
@@ -25,6 +26,7 @@ private:
 	GLuint hexagonVAO;
 	int hexagonVertexCount;
 	GLuint hexagonTexture[2];
+	GLuint playerTexture;
 
 	std::vector<std::unique_ptr<GameObject>> objects;
 	PlayerObject* player;

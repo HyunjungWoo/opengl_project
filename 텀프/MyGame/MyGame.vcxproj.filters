@@ -94,5 +94,11 @@
     <None Include="Shader\texVertex.glsl">
       <Filter>소스 파일\Shader</Filter>
     </None>
+    <None Include="Shader\fragment_shader.glsl">
+      <Filter>소스 파일\Shader</Filter>
+    </None>
+    <None Include="Shader\vertex_shader.glsl">
+      <Filter>소스 파일\Shader</Filter>
+    </None>
   </ItemGroup>
 </Project>

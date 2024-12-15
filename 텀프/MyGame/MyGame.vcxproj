@@ -162,11 +162,13 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Shader\fragment.glsl" />
+    <None Include="Shader\fragment_shader.glsl" />
     <None Include="Shader\plainFrag.glsl" />
     <None Include="Shader\plainVert.glsl" />
     <None Include="Shader\texFrag.glsl" />
     <None Include="Shader\texVertex.glsl" />
     <None Include="Shader\vertex.glsl" />
+    <None Include="Shader\vertex_shader.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -16,7 +16,6 @@ private:
 	GLuint plainShader;
 	GLuint texShader;
 
-
 	GLuint sphereVAO;
 	int sphereVertexCount;
 

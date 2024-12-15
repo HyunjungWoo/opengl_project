@@ -45,7 +45,7 @@ void Scene::initialize()
 	player->setShader(shader);
 	player->rotateY(180.f);
 
-	player->setPosition(0.f, 5.f, 5.f);
+	player->setPosition(0.f, 1.0f, 5.f);
 	//std::cout << "playerPosition : " << player->getPosition().x << ", " << player->getPosition().y << ", " << player->getPosition().z;
 
 	
@@ -109,27 +109,40 @@ void Scene::update(float elapsedTime)
 
 	// 플레이어와 다른 오브젝트 충돌 검사
 	for (size_t i = 0; i < objects.size(); ++i) {
+		if (objects[i]->getDie()) continue;
 		if (!objects[i]->getDie() && objects[i]->checkCollision(*player)) {
 			// 충돌 시 처리 (필요한 로직 구현)
-			//player->onCollision(objects[i].get());
+			player->onCollision(objects[i].get());
 			objects[i]->onCollision(player);
 		}
 	}
 	
+
+
 }
 
 void Scene::draw() const
 {
-	//glm::vec3 cameraPos = player->getPosition() + glm::vec3(0,0,+5);		// 플레이어 위치에서
+	//glm::vec3 cameraPos = player->getPosition() + glm::vec3(0, 0, +3);		// 플레이어 위치에서
 	//cameraPos.y = 5.f;
 	//glm::vec3 targetPos = cameraPos + player->getLook();// 플레이어 앞을 바라본다
 
-	glm::vec3 cameraPos = player->getPosition() + glm::vec3(0, 0, +3);		// 플레이어 위치에서
-	cameraPos.y = 5.f;
-	glm::vec3 targetPos = cameraPos + player->getLook();// 플레이어 앞을 바라본다
+	 // 플레이어의 현재 위치
+	glm::vec3 playerPos = player->getPosition();
+
+	// 카메라의 위치: 플레이어 위치 뒤쪽(Z 축 -3)으로 이동하고 Y 축으로 높임
+	glm::vec3 cameraOffset(0.0f, 3.0f, 4.0f); // Y축: 높이, Z축: 거리
+	glm::vec3 cameraPos = playerPos - player->getLook() * cameraOffset.z; // 뒤쪽으로 카메라 위치
+	cameraPos.y = playerPos.y + cameraOffset.y; // 위쪽으로 카메라 높이 설정
+
+	// 카메라가 바라볼 목표 지점: 플레이어 위치
+	glm::vec3 targetPos = playerPos;
+
+	// 월드 좌표계의 "위쪽" 벡터
+	glm::vec3 up(0.0f, 1.0f, 0.0f);
 
 
-	glm::mat4 viewMatrix = glm::lookAt(cameraPos, targetPos, glm::vec3(0.f, 1.f, 0.f));
+	glm::mat4 viewMatrix = glm::lookAt(cameraPos, targetPos, up);
 	glm::mat4 projMatrix = glm::perspective(glm::radians(45.f), float(width) / float(height), 0.1f, 100.f);
 
 	{	// 바닥을 깔아준다
@@ -151,10 +164,9 @@ void Scene::draw() const
 
 	glUseProgram(shader);
 
+	if (isdebug) player->visualizeCollisionBox(viewMatrix, projMatrix);
 	// 오브젝트 그리기
 	player->draw();		// 안그리긴 해도... 나중에 그릴 수 있으니 호출해준다
-	if (isdebug) player->visualizeCollisionBox(viewMatrix, projMatrix);
-
 
 	glUseProgram(texShader);
 

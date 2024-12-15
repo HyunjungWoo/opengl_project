@@ -36,11 +36,11 @@ void Scene::initialize()
 
 
 	initBuffer(&sphereVAO, &sphereVertexCount, "./OBJ/sphere.obj");
-	initBuffer(&crownVAO, &crownVertexCount, "./OBJ/teapot.obj");
+	initBuffer(&crownVAO, &crownVertexCount, "./OBJ/crown.obj");
 	initBufferWithUV(&hexagonVAO, &hexagonVertexCount, "./OBJ/hexagon2.obj");
 
-	std::string Filename[5] = { "./Image/test2.png","./Image/test5.png","./Image/test.png","./Image/test3.png" ,"./Image/test4.png" };
-	initTexture(hexagonTexture, 5, Filename);
+	std::string Filename[6] = { "./Image/test2.png","./Image/test5.png","./Image/test.png","./Image/test3.png" ,"./Image/test4.png", "./Image/crown.png" };
+	initTexture(hexagonTexture, 6, Filename);
 
 	std::string playerFilename = "./Image/1.png";
 	initTexture(&playerTexture, 1, &playerFilename);
@@ -115,6 +115,28 @@ void Scene::release()
 
 void Scene::update(float elapsedTime)
 {
+	// 경과 시간 누적
+    crownSpawnTimer += elapsedTime;
+	//std::cout << crownSpawnTimer << "\n";
+
+    // 30초가 지나고 왕관이 아직 배치되지 않았을 때
+    if (crownSpawnTimer >= 30.0f && !isCrownPlaced) {
+        isCrownPlaced = true;
+
+        // 왕관 오브젝트 생성
+        auto crown = std::make_unique<CrushObject>();
+        crown->setShader(texShader); // 왕관에 텍스처 셰이더 사용
+        crown->setVAO(crownVAO, crownVertexCount); // 왕관 VAO와 Vertex 설정
+        crown->setPosition(0.875, 3.2, 0.f); // 왕관 위치 설정
+        crown->initilize();
+
+        // 왕관 텍스처 설정 (필요하면 변경)
+        crown->setTexture(3); // 왕관에 적절한 텍스처 ID 설정
+
+        // 왕관을 오브젝트 목록에 추가
+        objects.push_back(std::move(crown));
+    }
+
 	player->update(elapsedTime);
 	for (auto& obj : objects) {
 		if (obj->getDie()){
@@ -253,6 +275,9 @@ void Scene::draw() const
 			}
 			else if (textureID == 4) {
 				glBindTexture(GL_TEXTURE_2D, hexagonTexture[4]);
+			}
+			else if (textureID == 5) {
+				glBindTexture(GL_TEXTURE_2D, hexagonTexture[5]);
 			}
 			// Draw 호출
 			if (obj->getDie()) { /*std::cout << "그리지마\n";*/ }

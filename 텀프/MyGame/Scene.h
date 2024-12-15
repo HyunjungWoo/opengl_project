@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <chrono>
 
 class GameObject;
 class PlayerObject;
@@ -25,7 +26,7 @@ private:
 
 	GLuint hexagonVAO;
 	int hexagonVertexCount;
-	GLuint hexagonTexture[5];
+	GLuint hexagonTexture[6];
 	GLuint playerTexture;
 
 	std::vector<std::unique_ptr<GameObject>> objects;
@@ -37,6 +38,8 @@ private:
 
 	bool isdebug;
 
+	float crownSpawnTimer = 0.0f; // 경과 시간 저장
+	bool isCrownPlaced = false;   // 왕관이 배치되었는지 여부
 
 public:
 	// 게임 로직에서, update, draw..., 키 입력

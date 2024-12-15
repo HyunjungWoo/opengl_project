@@ -16,7 +16,7 @@ void main()
 {
 	outTexcoord = inTexcoord;
 	outFragPos = vec3(modelTransform * vec4(inPos, 1.f));
-	outNormal = mat3(modelTransform) * inNormal;	// x, y, z축에 대하여 같은 크기의 신축
+	outNormal = mat3(transpose(inverse(modelTransform))) * inNormal;	// x, y, z축에 대하여 같은 크기의 신축
 	// outNormal = transpose(inverse(mat3(modelTransform))) * inNormal;		// x, y, z축에 대하여 다른 크기의 신축
 	// normal은 이동을 하면 안된다!		// x, y, z축에 대하여 균등 축소/확대라면 직교행렬..-> inverse == transpose
 

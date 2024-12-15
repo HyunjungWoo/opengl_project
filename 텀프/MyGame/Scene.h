@@ -20,12 +20,12 @@ private:
 	GLuint sphereVAO;
 	int sphereVertexCount;
 
-	GLuint teapotVAO;
-	int teapotVertexCount;
+	GLuint crownVAO;
+	int crownVertexCount;
 
 	GLuint hexagonVAO;
 	int hexagonVertexCount;
-	GLuint hexagonTexture[2];
+	GLuint hexagonTexture[5];
 	GLuint playerTexture;
 
 	std::vector<std::unique_ptr<GameObject>> objects;

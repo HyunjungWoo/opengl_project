@@ -36,10 +36,11 @@ void Scene::initialize()
 
 
 	initBuffer(&sphereVAO, &sphereVertexCount, "./OBJ/sphere.obj");
-	initBuffer(&teapotVAO, &teapotVertexCount, "./OBJ/teapot.obj");
+	initBuffer(&crownVAO, &crownVertexCount, "./OBJ/teapot.obj");
 	initBufferWithUV(&hexagonVAO, &hexagonVertexCount, "./OBJ/hexagon2.obj");
-	std::string Filename[2] = { "./Image/test2.png","./Image/test5.png" };
-	initTexture(hexagonTexture, 2, Filename);
+
+	std::string Filename[5] = { "./Image/test2.png","./Image/test5.png","./Image/test.png","./Image/test3.png" ,"./Image/test4.png" };
+	initTexture(hexagonTexture, 5, Filename);
 
 	std::string playerFilename = "./Image/1.png";
 	initTexture(&playerTexture, 1, &playerFilename);
@@ -50,47 +51,58 @@ void Scene::initialize()
 	player->setShader(fbxShader);
 	player->rotateY(180.f);
 
-	player->setPosition(0.f, 1.0f, 5.f);
+	player->setPosition(0.f, 10.0f, 5.f);
 	//std::cout << "playerPosition : " << player->getPosition().x << ", " << player->getPosition().y << ", " << player->getPosition().z;
 
 	
 
-	//srand(clock());
-	// 
-	// 줄별 육각형 개수 설정
 	std::vector<int> rowCounts = { 5, 6, 7, 8, 9, 8, 7, 6, 5 }; // 각 줄의 육각형 개수
 	float radius = 1.0f; // 육각형 간의 중심 거리 (반지름)
 	float startZ = -5.f;  // z 방향 시작점
 	int index = 0;       // 오브젝트 인덱스 초기화
+	float heightOffset = 4.f * radius; // 층 간의 y 좌표 간격
 
+	int layers = 3; // 층의 개수 (기존 + 위로 2층 추가)
 
+	for (int layer = 0; layer < layers; ++layer) { // 층 반복
+		for (size_t row = 0; row < rowCounts.size(); ++row) {
+			int hexCount = rowCounts[row];                         // 현재 줄의 육각형 개수
+			float startX = -(hexCount - 1) * 1.75f * radius / 2.0f; // 줄의 중앙 시작 x 좌표
 
-	for (size_t row = 0; row < rowCounts.size(); ++row) {
-		int hexCount = rowCounts[row];                         // 현재 줄의 육각형 개수
-		float startX = -(hexCount - 1) * 1.75f * radius / 2.0f; // 줄의 중앙 시작 x 좌표
+			for (int col = 0; col < hexCount; ++col) {
+				float x = startX + col * 1.75f * radius; // x 좌표 계산
+				float z = startZ;                      // z 좌표는 줄 단위로 고정
+				float y = layer * heightOffset;        // 층의 y 좌표 계산
 
-		for (int col = 0; col < hexCount; ++col) {
-			float x = startX + col * 1.75f * radius; // x 좌표 계산
-			float z = startZ;                      // z 좌표는 줄 단위로 고정
+				// 층별 텍스처 배열 정의
+				int textureIndex = 0; // 기본값
+				if (layer % 3 == 0) { // 1층
+					textureIndex = (row + col) % 2; // 0, 1 반복
+				}
+				else if (layer % 3 == 1) { // 2층
+					textureIndex = 2 + (row + col) % 2; // 2, 3 반복
+				}
+				else if (layer % 3 == 2) { // 3층
+					textureIndex = (row + col) % 2 == 0 ? 3 : 1; // 3, 1 반복
+				}
 
-			// 텍스처 선택
-			int textureIndex = (row + col) % 2; // 짝수/홀수로 텍스처 선택
+				// 육각형 생성 및 설정
+				auto obj = std::make_unique<CrushObject>();
+				obj->setShader(texShader);
+				obj->setVAO(hexagonVAO, hexagonVertexCount);
+				obj->setPosition(x, y, z); // y 좌표 포함하여 설정
 
-			// 육각형 생성 및 설정
-			auto obj = std::make_unique<CrushObject>();
-			obj->setShader(texShader);
-			obj->setVAO(hexagonVAO, hexagonVertexCount);
-			obj->setPosition(x, 0.f, z); // y 좌표는 항상 0
-			
-			obj->initilize();
-			// 텍스처 설정
-			obj->setTexture(textureIndex); // 선택된 텍스처를 객체에 설정
+				obj->initilize();
+				// 텍스처 설정
+				obj->setTexture(textureIndex); // 선택된 텍스처를 객체에 설정
 
-			// 객체를 벡터에 추가
-			objects.push_back(std::move(obj));
+				// 객체를 벡터에 추가
+				objects.push_back(std::move(obj));
+			}
+
+			startZ += sqrt(2.3) * radius; // 다음 줄의 z 좌표로 이동
 		}
-
-		startZ += sqrt(2.3) * radius; // 다음 줄의 z 좌표로 이동
+		startZ = -5.f; // 각 층마다 z 좌표를 초기화
 	}
 
 	objectCount = objects.size(); // 전체 오브젝트 개수
@@ -230,10 +242,18 @@ void Scene::draw() const
 			if (textureID == 0) {
 				glBindTexture(GL_TEXTURE_2D, hexagonTexture[0]);
 			}
-			else {
+			else if(textureID == 1){
 				glBindTexture(GL_TEXTURE_2D, hexagonTexture[1]);
 			}
-
+			else if (textureID == 2) {
+				glBindTexture(GL_TEXTURE_2D, hexagonTexture[2]);
+			}
+			else if (textureID == 3) {
+				glBindTexture(GL_TEXTURE_2D, hexagonTexture[3]);
+			}
+			else if (textureID == 4) {
+				glBindTexture(GL_TEXTURE_2D, hexagonTexture[4]);
+			}
 			// Draw 호출
 			if (obj->getDie()) { /*std::cout << "그리지마\n";*/ }
 			else{

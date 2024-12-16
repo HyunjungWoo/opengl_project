@@ -20,6 +20,12 @@ Scene::Scene(int winWidth, int winHeight)
 	: width{ winWidth }, height{ winHeight }
 {
 	isdebug = false;
+	isPaused = false;
+	isStartScreen = true;
+	isClear = false;
+	isGameOver = false;
+
+	bgVAO, bgVBO, bgEBO = {};
 }
 
 Scene::~Scene()
@@ -45,6 +51,10 @@ void Scene::initialize()
 	std::string playerFilename = "./Image/1.png";
 	initTexture(&playerTexture, 1, &playerFilename);
 
+	std::string bgFilename[3] = { "./Image/mainScreen.png", "./Image/Gameover.png", "./Image/GameClear.png"};
+	initTexture(bgTexture, 3, bgFilename);
+
+
 	player = new PlayerObject;
 
 	player->setVAO(sphereVAO, sphereVertexCount);
@@ -54,15 +64,16 @@ void Scene::initialize()
 	player->setPosition(0.f, 10.0f, 5.f);
 	//std::cout << "playerPosition : " << player->getPosition().x << ", " << player->getPosition().y << ", " << player->getPosition().z;
 
-	
+	initbg();
 
 	std::vector<int> rowCounts = { 5, 6, 7, 8, 9, 8, 7, 6, 5 }; // 각 줄의 육각형 개수
 	float radius = 1.0f; // 육각형 간의 중심 거리 (반지름)
 	float startZ = -5.f;  // z 방향 시작점
 	int index = 0;       // 오브젝트 인덱스 초기화
-	float heightOffset = 4.f * radius; // 층 간의 y 좌표 간격
+	float heightOffset = 5.f * radius; // 층 간의 y 좌표 간격
 
 	int layers = 3; // 층의 개수 (기존 + 위로 2층 추가)
+
 
 	for (int layer = 0; layer < layers; ++layer) { // 층 반복
 		for (size_t row = 0; row < rowCounts.size(); ++row) {
@@ -115,6 +126,8 @@ void Scene::release()
 
 void Scene::update(float elapsedTime)
 {
+	if (isStartScreen) { return; }
+	if (isPaused) return;
 	// 경과 시간 누적
     crownSpawnTimer += elapsedTime;
 	//std::cout << crownSpawnTimer << "\n";
@@ -138,30 +151,38 @@ void Scene::update(float elapsedTime)
     }
 
 	player->update(elapsedTime);
-	for (auto& obj : objects) {
-		if (obj->getDie()){
-			objectCount--;
-			obj.reset();  // 객체를 명시적으로 삭제할 때
-		}
-		else obj->update(elapsedTime);
-	}
-
-	// 플레이어와 다른 오브젝트 충돌 검사
+	
 	for (size_t i = 0; i < objects.size(); ++i) {
-		if (objects[i]->getDie()) continue;
-		if (!objects[i]->getDie() && objects[i]->checkCollision(*player)) {
-			// 충돌 시 처리 (필요한 로직 구현)
+		if (objects[i] && !objects[i]->getDie() && objects[i]->checkCollision(*player)) {
 			player->onCollision(objects[i].get());
 			objects[i]->onCollision(player);
 		}
 	}
-	
+
+	// 업데이트 및 삭제 처리
+	for (size_t i = 0; i < objects.size(); ++i) {
+		if (objects[i] && objects[i]->getDie()) {
+			objects[i].reset();  // 객체 삭제
+			--objectCount;
+		}
+		else if (objects[i]) {
+			objects[i]->update(elapsedTime);
+		}
+	}
 
 
 }
 
 void Scene::draw() const
 {
+	if (isPaused) {
+		
+	}
+	else if (isStartScreen || isClear || isGameOver)
+	{
+		Drawbg();
+	}
+
 	//glm::vec3 cameraPos = player->getPosition() + glm::vec3(0, 0, +3);		// 플레이어 위치에서
 	//cameraPos.y = 5.f;
 	//glm::vec3 targetPos = cameraPos + player->getLook();// 플레이어 앞을 바라본다
@@ -184,6 +205,8 @@ void Scene::draw() const
 	glm::mat4 viewMatrix = glm::lookAt(cameraPos, targetPos, up);
 	glm::mat4 projMatrix = glm::perspective(glm::radians(45.f), float(width) / float(height), 0.1f, 100.f);
 
+	
+
 	{	// 바닥을 깔아준다
 		// 카메라, 투영은 씬 전체에 적용..
 		glUseProgram(plainShader);
@@ -199,6 +222,7 @@ void Scene::draw() const
 		glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projMatrix));
 
 		glDrawArrays(GL_TRIANGLES, 0, 6);
+
 	}
 
 	{
@@ -313,6 +337,20 @@ void Scene::keyboard(unsigned char key, bool isPressed)
 		case 'm':
 			isdebug = !isdebug;
 			break;
+		case 'p':
+		case 'P':
+			isPaused = !isPaused;
+			break;
+		case ' ':
+			if (isStartScreen) {
+				isStartScreen = false;  // 스페이스바로 게임 시작
+			}
+			break;
+		case 'r':
+			release();
+			// 게임 초기화
+			initialize();
+			break;
 		default:
 			break;
 		}
@@ -388,6 +426,100 @@ void Scene::setWindowSize(int winWidth, int winHeight)
 	width = winWidth;
 	height = winHeight;
 }
+
+void Scene::initbg()
+{
+	// 정점 데이터: 위치 (x, y, z), 텍스처 좌표 (u, v, w), 법선 벡터 (nx, ny, nz)
+	float vertices[] = {
+		//--- 위치 (x, y, z) ---   //--- 텍스처 좌표 (u, v, w) ---   //--- 법선 벡터 (nx, ny, nz) ---
+		-1.0f, -1.0f, 0.0f,        0.0f, 0.0f, 0.0f,                0.0f, 0.0f, 1.0f, // Bottom-left
+	 1.0f, -1.0f, 0.0f,        1.0f, 0.0f, 0.0f,                0.0f, 0.0f, 1.0f, // Bottom-right
+	 1.0f,  1.0f, 0.0f,        1.0f, 1.0f, 0.0f,                0.0f, 0.0f, 1.0f, // Top-right
+	-1.0f,  1.0f, 0.0f,        0.0f, 1.0f, 0.0f,                0.0f, 0.0f, 1.0f  // Top-left
+	};
+
+	// 인덱스 데이터: 사각형을 두 개의 삼각형으로 정의
+	unsigned int indices[] = {
+		0, 1, 2, // 삼각형 1
+		0, 2, 3  // 삼각형 2
+	};
+
+	// VAO, VBO, EBO 생성
+
+	glGenVertexArrays(1, &bgVAO);
+	glGenBuffers(1, &bgVBO);
+	glGenBuffers(1, &bgEBO);
+
+	// VAO 바인딩
+	glBindVertexArray(bgVAO);
+
+	// VBO 설정
+	glBindBuffer(GL_ARRAY_BUFFER, bgVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+	// EBO 설정
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bgEBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+	// 위치 속성 (layout = 0)
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	// 텍스처 좌표 속성 (layout = 1)
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	// 법선 벡터 속성 (layout = 2)
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+
+	// VAO 바인딩 해제
+	glBindVertexArray(0);
+
+}
+
+void Scene::Drawbg() const
+{
+	// 텍스처 활성화 및 바인딩
+	glActiveTexture(GL_TEXTURE0);
+
+	if(isStartScreen)
+		glBindTexture(GL_TEXTURE_2D, bgTexture[0]); // yourTextureID는 생성된 텍스처 ID
+	else if (isGameOver) 
+		glBindTexture(GL_TEXTURE_2D, bgTexture[1]); // yourTextureID는 생성된 텍스처 ID
+	else if (isClear)
+		glBindTexture(GL_TEXTURE_2D, bgTexture[2]); // yourTextureID는 생성된 텍스처 ID
+
+
+	// 셰이더 활성화
+	glUseProgram(texShader); // yourShaderProgram은 셰이더 프로그램 ID
+
+	// 유니폼 설정
+	glm::mat4 modelMatrix = glm::mat4(1.0f); // 기본 변환 없음
+	glm::mat4 viewMatrix = glm::mat4(1.0f);  // 뷰 변환 없음
+	glm::mat4 projMatrix = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f); // 직교 투영
+
+	glUniformMatrix4fv(glGetUniformLocation(texShader, "modelTransform"), 1, GL_FALSE, glm::value_ptr(modelMatrix));
+	glUniformMatrix4fv(glGetUniformLocation(texShader, "viewTransform"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
+	glUniformMatrix4fv(glGetUniformLocation(texShader, "projTransform"), 1, GL_FALSE, glm::value_ptr(projMatrix));
+	glUniform1f(glGetUniformLocation(texShader, "brightness"), 10.0f);
+
+	// VAO 바인딩
+	if (!bgVAO || !bgVBO || !bgEBO) {
+		std::cerr << "bgVAO, bgVBO, 또는 bgEBO가 생성되지 않았습니다!" << std::endl;
+		return;
+	}
+	glBindVertexArray(bgVAO);
+
+	// 그리기
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+	// VAO 바인딩 해제
+	glBindVertexArray(0);
+
+}
+
+
 
 void Scene::initBuffer(GLuint* VAO, GLsizei* vertexCount, std::string objFilename)
 {

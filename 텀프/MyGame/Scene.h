@@ -29,6 +29,11 @@ private:
 	GLuint hexagonTexture[6];
 	GLuint playerTexture;
 
+	GLuint bgTexture[3];
+	GLuint bgVAO, bgVBO, bgEBO;
+
+
+
 	std::vector<std::unique_ptr<GameObject>> objects;
 	PlayerObject* player;
 	
@@ -37,6 +42,10 @@ private:
 	int height;
 
 	bool isdebug;
+	bool isPaused;
+	bool isStartScreen = true; 
+	bool isGameOver;
+	bool isClear;
 
 	float crownSpawnTimer = 0.0f; // 경과 시간 저장
 	bool isCrownPlaced = false;   // 왕관이 배치되었는지 여부
@@ -59,6 +68,10 @@ public:
 	void mouseMove(int x, int y);
 
 	void setWindowSize(int winWidth, int winHeight);
+	
+	void initbg();
+	void Drawbg() const;
+
 
 private:
 	static void initBuffer(GLuint* VAO, GLsizei* vertexCount, std::string objFilename);

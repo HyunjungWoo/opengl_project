@@ -128,27 +128,45 @@ void Scene::update(float elapsedTime)
 {
 	if (isStartScreen || isPaused || isClear || isGameOver) { return; }
 	// 경과 시간 누적
-    crownSpawnTimer += elapsedTime;
+	crownSpawnTimer += elapsedTime;
 	//std::cout << crownSpawnTimer << "\n";
 
-    // 30초가 지나고 왕관이 아직 배치되지 않았을 때
-    if (crownSpawnTimer >= 30.0f && !isCrownPlaced) {
-        isCrownPlaced = true;
+	// 30초가 지나고 왕관이 아직 배치되지 않았을 때
+	if (crownSpawnTimer >= 30.0f && !isCrownPlaced) {
+		isCrownPlaced = true;
 
-        // 왕관 오브젝트 생성
-        auto crown = std::make_unique<CrushObject>();
-        crown->setShader(texShader); // 왕관에 텍스처 셰이더 사용
-        crown->setVAO(crownVAO, crownVertexCount); // 왕관 VAO와 Vertex 설정
-        crown->setPosition(0.875, 2.2, 0.f); // 왕관 위치 설정
-        crown->initilize();
+		// 왕관 오브젝트 생성
+		auto crown = std::make_unique<CrushObject>();
+		crown->setShader(texShader); // 왕관에 텍스처 셰이더 사용
+		crown->setVAO(crownVAO, crownVertexCount); // 왕관 VAO와 Vertex 설정
+		crown->setPosition(0.875, 2.2, 0.f); // 왕관 위치 설정
+		crown->initilize();
+		crown->setDie(false);
+		// 왕관 텍스처 설정 (필요하면 변경)
+		crown->setTexture(3); // 왕관에 적절한 텍스처 ID 설정
 
-        // 왕관 텍스처 설정 (필요하면 변경)
-        crown->setTexture(3); // 왕관에 적절한 텍스처 ID 설정
 
-        // 왕관을 오브젝트 목록에 추가
-        objects.push_back(std::move(crown));
-    }
+		// 왕관을 오브젝트 목록에 추가
+		objects.push_back(std::move(crown));
 
+
+		// 마지막 오브젝트가 왕관인지 확인
+		auto* lastObj = dynamic_cast<CrushObject*>(objects.back().get());
+		if (lastObj) {
+			//std::cout << "왕관";
+		}
+	}
+	
+	if (isCrownPlaced) {
+		// 마지막 오브젝트가 삭제되었는지 확인
+		if (!objects.empty()) {
+			auto* lastObj = dynamic_cast<CrushObject*>(objects.back().get());
+			if (lastObj && lastObj->getDie()) {
+				std::cout << "왕관이 삭제되었습니다." << std::endl;
+				isClear = true;  // 왕관이 삭제된 상태면 게임 클리어
+			}
+		}
+	}
 	player->update(elapsedTime);
 	if (player->getPosition().y <= -10.f)
 	{
@@ -173,18 +191,6 @@ void Scene::update(float elapsedTime)
 		}
 	}
 
-	if (!objects.empty()) {
-		// 벡터의 마지막 객체를 확인
-		auto& lastObj = objects.back();
-
-		if (auto* crownObj = dynamic_cast<CrushObject*>(lastObj.get())) {
-			// 왕관 객체일 경우, getDie()가 true인 경우 삭제된 것으로 판단
-			if (crownObj->getDie()) {
-				std::cout << "왕관이 삭제되었습니다." << std::endl;
-				isClear = true;  // 게임 클리어 상태로 변경
-			}
-		}
-	}
 
 }
 

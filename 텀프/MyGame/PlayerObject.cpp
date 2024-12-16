@@ -96,6 +96,9 @@ void PlayerObject::update(float elapsedTime)
     } else {
         isOnGround = false;      // 공중 상태
     }
+
+   
+
 }
 
 void PlayerObject::draw() const

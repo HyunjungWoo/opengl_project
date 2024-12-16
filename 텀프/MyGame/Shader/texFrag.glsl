@@ -15,7 +15,7 @@ uniform float brightness;
 const float ambientLight = 0.1f;
 const vec3 lightColor = vec3(1.f, 1.f, 1.f);	// 과제에선 uniform으로 해야할 것
 
-const vec3 lightPos = vec3(10.f, 10.f, 0.f);
+const vec3 lightPos = vec3(10.f, 15.f, 0.f);
 
 void main()
 {

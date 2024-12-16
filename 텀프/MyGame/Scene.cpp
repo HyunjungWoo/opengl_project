@@ -61,7 +61,7 @@ void Scene::initialize()
 	player->setShader(fbxShader);
 	player->rotateY(180.f);
 
-	player->setPosition(0.f, 10.0f, 5.f);
+	player->setPosition(0.f, 12.0f, 5.f);
 	//std::cout << "playerPosition : " << player->getPosition().x << ", " << player->getPosition().y << ", " << player->getPosition().z;
 
 	initbg();
@@ -126,8 +126,7 @@ void Scene::release()
 
 void Scene::update(float elapsedTime)
 {
-	if (isStartScreen) { return; }
-	if (isPaused) return;
+	if (isStartScreen || isPaused || isClear || isGameOver) { return; }
 	// 경과 시간 누적
     crownSpawnTimer += elapsedTime;
 	//std::cout << crownSpawnTimer << "\n";
@@ -140,7 +139,7 @@ void Scene::update(float elapsedTime)
         auto crown = std::make_unique<CrushObject>();
         crown->setShader(texShader); // 왕관에 텍스처 셰이더 사용
         crown->setVAO(crownVAO, crownVertexCount); // 왕관 VAO와 Vertex 설정
-        crown->setPosition(0.875, 3.2, 0.f); // 왕관 위치 설정
+        crown->setPosition(0.875, 2.2, 0.f); // 왕관 위치 설정
         crown->initilize();
 
         // 왕관 텍스처 설정 (필요하면 변경)
@@ -151,7 +150,11 @@ void Scene::update(float elapsedTime)
     }
 
 	player->update(elapsedTime);
-	
+	if (player->getPosition().y <= -10.f)
+	{
+		std::cout << "y: " << player->getPosition().y << "\n";
+		isGameOver = true;
+	}
 	for (size_t i = 0; i < objects.size(); ++i) {
 		if (objects[i] && !objects[i]->getDie() && objects[i]->checkCollision(*player)) {
 			player->onCollision(objects[i].get());
@@ -170,6 +173,18 @@ void Scene::update(float elapsedTime)
 		}
 	}
 
+	if (!objects.empty()) {
+		// 벡터의 마지막 객체를 확인
+		auto& lastObj = objects.back();
+
+		if (auto* crownObj = dynamic_cast<CrushObject*>(lastObj.get())) {
+			// 왕관 객체일 경우, getDie()가 true인 경우 삭제된 것으로 판단
+			if (crownObj->getDie()) {
+				std::cout << "왕관이 삭제되었습니다." << std::endl;
+				isClear = true;  // 게임 클리어 상태로 변경
+			}
+		}
+	}
 
 }
 
@@ -347,6 +362,8 @@ void Scene::keyboard(unsigned char key, bool isPressed)
 			}
 			break;
 		case 'r':
+			isGameOver = false;
+			isClear = false;
 			release();
 			// 게임 초기화
 			initialize();
